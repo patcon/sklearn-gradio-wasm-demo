@@ -8,3 +8,9 @@ This could theoretically be used to run pyodide-compatible Python in the browser
 ## Screenshot
 
 <img width="80%" height="716" alt="Screenshot 2025-08-14 at 10 19 24 AM" src="https://github.com/user-attachments/assets/103d2968-f638-431f-ad78-9037ff36918d" />
+
+## Attribution
+
+Code came from this comment:
+
+https://github.com/scikit-learn/scikit-learn/issues/24878#issuecomment-3156806200
