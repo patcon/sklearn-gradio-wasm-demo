@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto&display=swap" >
+  <style>
+      body {
+          font-family: 'Roboto', sans-serif;
+          font-size: 16px; 
+      }
+    .logo {
+        height: 1em;
+        vertical-align: middle;
+        margin-bottom: 0.1em; 
+      }
+  </style>
+    
+  <script type="module" crossorigin src="https://cdn.jsdelivr.net/npm/@gradio/lite@5.41.0/dist/lite.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gradio/lite@5.41.0/dist/lite.css" />
+</head>
+<body>
+  <h2>
+    <img src="https://gradio-builds.s3.amazonaws.com/assets/lite-logo.png" alt="logo" class="logo">
+    Gradio and scikit-learn running entirely in your browser thanks to pyodide!
+  </h2>
+<gradio-lite>
+🔥
+<gradio-requirements>
+scikit-learn
+plotly
+numpy
+</gradio-requirements>
+
+<gradio-file name="app.py" entrypoint>
+import numpy as np
+import plotly.graph_objects as go
+
+from sklearn import decomposition
+from sklearn import datasets
+
+import gradio as gr
+
+np.random.seed(5)
+
+## PCA
+def PCA_Pred(x1, x2, x3, x4):
+    #Load Data from iris dataset:
+    iris = datasets.load_iris()
+    X = iris.data
+    Y = iris.target
+    label_data = [("Setosa", 0), ("Versicolour", 1), ("Virginica", 2)]
+
+    #Create the model with 3 principal components:
+    pca = decomposition.PCA(n_components=3)
+    
+    #Fit model and transform (decrease dimensions) iris dataset:
+    pca.fit(X)
+    X = pca.transform(X)
+
+    #Create figure with plotly
+    fig = go.Figure()
+
+    for name, label in label_data:
+        fig.add_trace(go.Scatter3d(
+            x=X[Y == label, 0],
+            y=X[Y == label, 1],
+            z=X[Y == label, 2],
+            mode='markers',
+            marker=dict(
+                size=8,
+                color=label,            
+                colorscale='Viridis',   
+                opacity=0.8),
+            name=name
+            ))
+    
+    user_iris_data = np.array([[x1, x2, x3, x4]], ndmin=2)
+
+    #Perform reduction to user data
+    pc_output = pca.transform(user_iris_data)
+    fig.add_traces([go.Scatter3d(
+            x=np.array(pc_output[0, 0]),
+            y=np.array(pc_output[0, 1]),
+            z=np.array(pc_output[0, 2]),
+            mode='markers',
+            marker=dict(
+                size=12,
+                color=4,                # set color
+                colorscale='Viridis',   # choose a colorscale
+                opacity=0.8),
+            name="User data"
+            )])
+    fig.update_layout(scene = dict(
+                            xaxis_title="1st PCA Axis",
+                            yaxis_title="2nd PCA Axis",
+                            zaxis_title="3th PCA Axis"),
+                     legend_title="Species"
+                    )
+
+    return [pc_output, fig]
+    
+title = "PCA example with Iris Dataset 🌺"
+sample_versicolour = [ 5.5, 2.6, 4.4, 1.2 ]
+with gr.Blocks(title=title) as demo:
+    gr.Markdown(f"## {title}")
+    gr.Markdown(
+        """
+        The following app is a demo for PCA decomposition. It takes 4 dimensions as input, in reference \
+        to the following image, and returns the transformed first three principal components (feature \
+        reduction), taken from a pre-trained model with Iris dataset. 
+        """)
+    with gr.Row():
+        with gr.Column():
+            inp1 = gr.Slider(0, 7, value=sample_versicolour[0], step=0.1, label="Sepal Length (cm)")
+            inp2 = gr.Slider(0, 5, value=sample_versicolour[1], step=0.1, label="Sepal Width (cm)")
+            inp3 = gr.Slider(0, 7, value=sample_versicolour[2], step=0.1, label="Petal Length (cm)")
+            inp4 = gr.Slider(0, 5, value=sample_versicolour[3], step=0.1, label="Petal Width (cm)")
+            output = gr.Textbox(label="PCA Axes")
+        with gr.Column():
+            plot = gr.Plot(label="PCA 3D Space")
+
+    Reduction = gr.Button("PCA Transform")
+    Reduction.click(fn=PCA_Pred, inputs=[inp1, inp2, inp3, inp4], outputs=[output, plot])
+    demo.load(fn=PCA_Pred, inputs=[inp1, inp2, inp3, inp4], outputs=[output, plot])
+
+demo.launch()
+</gradio-file>
+
+</gradio-lite>		
+</body>
+</html>
